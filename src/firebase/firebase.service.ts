@@ -25,6 +25,13 @@ export class FirebaseService {
       .catch(this.handleFirebaseAuthError)) as UserRecord;
   }
 
+  async deleteUser(uid: string) {
+    return await firebaseAdmin
+      .auth()
+      .deleteUser(uid)
+      .catch(this.handleFirebaseAuthError);
+  }
+
   async setCustomUserClaims(uid: string, claims: Record<string, any>) {
     return await firebaseAdmin.auth().setCustomUserClaims(uid, claims);
   }

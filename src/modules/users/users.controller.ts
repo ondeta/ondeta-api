@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -22,6 +24,13 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async profile(@IdToken() token: string) {
-    return await this.firebaseService.verifyIdToken(token);
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+
+    const dbData = await this.usersService.getUserProfile(firebaseData.uid);
+
+    return {
+      firebase: firebaseData,
+      profile: dbData,
+    };
   }
 }
