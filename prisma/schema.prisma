@@ -38,8 +38,6 @@ model auth_accounts {
   id              Int       @id @default(autoincrement())
   firebase_uid    String    @unique @db.VarChar(128)
   email           String    @unique @db.VarChar(100)
-  role            roles
-  account_type    account_type
   is_active       Boolean   @default(true)
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt

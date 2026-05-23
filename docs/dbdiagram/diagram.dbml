@@ -26,10 +26,6 @@ Table auth_accounts {
 
   email varchar(100) [unique]
 
-  role roles
-
-  account_type account_type
-
   is_active boolean [default: true]
 
   created_at timestamp
