@@ -26,6 +26,8 @@ Table auth_accounts {
 
   email varchar(100) [unique]
 
+  account_type account_type
+
   is_active boolean [default: true]
 
   created_at timestamp
@@ -117,6 +119,12 @@ Table memberships {
   role roles
 
   created_at timestamp
+
+  Indexes {
+    user_id
+    company_id
+    (user_id, company_id) [unique]
+  }
 }
 
 Table company_services {

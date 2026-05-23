@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { RegisterUserDto } from './dto/register-user.dto';
 import { FirebaseService } from '@/firebase/firebase.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { IdToken } from '../auth/id-token.decorator';
@@ -14,11 +12,6 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly firebaseService: FirebaseService,
   ) {}
-
-  @Post('register')
-  async registerUser(@Body() dto: RegisterUserDto) {
-    return await this.usersService.registerUser(dto);
-  }
 
   @Get('profile')
   @UseGuards(AuthGuard)

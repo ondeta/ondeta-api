@@ -38,6 +38,7 @@ model auth_accounts {
   id              Int       @id @default(autoincrement())
   firebase_uid    String    @unique @db.VarChar(128)
   email           String    @unique @db.VarChar(100)
+  account_type    account_type
   is_active       Boolean   @default(true)
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
@@ -120,6 +121,10 @@ model memberships {
 
   user            users     @relation(fields: [user_id], references: [id])
   company         companies @relation(fields: [company_id], references: [id])
+
+  @@index([user_id])
+  @@index([company_id])
+  @@unique([user_id, company_id])
 }
 
 model company_services {

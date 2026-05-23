@@ -31,8 +31,8 @@ export function AccountTypeGuard(...allowedTypes: string[]): Type<CanActivate> {
 
       try {
         const decodedToken = await this.firebaseService.verifyIdToken(token);
-        const accountType = decodedToken.account_type ?? [];
-        return allowedTypes.some((type) => accountType.includes(type));
+        const accountType = decodedToken.account_type;
+        return allowedTypes.includes(accountType);
       } catch {
         return false;
       }
