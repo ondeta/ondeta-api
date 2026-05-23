@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class RegisterUserDto {
   @ApiProperty({ description: 'Full name of the user' })
@@ -16,4 +22,13 @@ export class RegisterUserDto {
   @IsNotEmpty({ message: 'Password is required' })
   @Length(8, 20, { message: 'Password must be between 8 and 20 characters' })
   password!: string;
+
+  @ApiProperty({
+    description: 'Type of the user account',
+    example: ['user', 'company'],
+  })
+  @IsArray()
+  @IsNotEmpty({ message: 'Account type is required' })
+  @IsString({ each: true })
+  account_type!: string[];
 }

@@ -7,10 +7,18 @@ export class UsersService {
   constructor(private readonly firebaseService: FirebaseService) {}
 
   async registerUser(dto: RegisterUserDto) {
-    return await this.firebaseService.createUser({
+    const user = await this.firebaseService.createUser({
       displayName: dto.fullName,
       email: dto.email,
       password: dto.password,
     });
+
+    if (dto.account_type?.length) {
+      await this.firebaseService.setCustomUserClaims(user.uid, {
+        account_type: dto.account_type,
+      });
+    }
+
+    return user;
   }
 }
