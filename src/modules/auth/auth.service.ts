@@ -16,4 +16,13 @@ export class AuthService {
       expiresIn,
     };
   }
+
+  async logout(token: string) {
+    const { uid } = await this.firebaseService.verifyIdToken(token);
+    return await this.firebaseService.revokeRefreshToken(uid);
+  }
+
+  async refreshToken(refreshToken: string) {
+    return await this.firebaseService.refreshAuthToken(refreshToken);
+  }
 }

@@ -41,6 +41,33 @@ export class FirebaseService {
     }).catch(this.handleRestApiError);
   }
 
+  async revokeRefreshToken(uid: string) {
+    return await firebaseAdmin
+      .auth()
+      .revokeRefreshTokens(uid)
+      .catch(this.handleFirebaseAuthError);
+  }
+
+  async refreshAuthToken(refreshToken: string) {
+    const {
+      id_token: idToken,
+      refresh_token: newRefreshToken,
+      expires_in: expiresIn,
+    } = await this.sendRefreshAuthTokenRequest(refreshToken).catch(
+      this.handleRestApiError,
+    );
+    return { idToken, refreshToken: newRefreshToken, expiresIn };
+  }
+
+  private async sendRefreshAuthTokenRequest(refreshToken: string) {
+    const url = `https://securetoken.googleapis.com/v1/token?key=${this.apiKey}`;
+    const payload = {
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    };
+    return await this.sendPostRequest(url, payload);
+  }
+
   private async sendPostRequest(url: string, data: any) {
     const response = await axios.post(url, data, {
       headers: { 'Content-Type': 'application/json' },
