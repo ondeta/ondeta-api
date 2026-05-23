@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum account_type {
+  user
+  company
+}
+
+enum roles {
+  member
+  admin
+  owner
+}
+
+enum status_service_request {
+  pendente
+  aceito
+  agendado
+  em_rota
+  finalizado
+  cancelado
+  recusado
+}
+
+model auth_accounts {
+  id              Int       @id @default(autoincrement())
+  firebase_uid    String    @unique @db.VarChar(128)
+  email           String    @unique @db.VarChar(100)
+  account_type    account_type
+  is_active       Boolean   @default(true)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  users           users?
+  companies       companies?
+}
+
+model users {
+  id              Int       @id @default(autoincrement())
+  auth_account_id Int       @unique
+  full_name       String?   @db.VarChar(150)
+  cpf             String?   @unique @db.Char(11)
+  phone_number    String?   @db.Char(15)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  auth_account    auth_accounts @relation(fields: [auth_account_id], references: [id])
+  user_addresses  user_addresses[]
+  memberships     memberships[]
+  service_requests service_requests[]
+
+  @@index([auth_account_id])
+}
+
+model user_addresses {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  label           String?   @db.VarChar(50)
+  country         String?   @db.VarChar(80)
+  state           String?   @db.VarChar(80)
+  city            String?   @db.VarChar(80)
+  neighborhood    String?   @db.VarChar(100)
+  street          String?   @db.VarChar(150)
+  number          String?   @db.VarChar(20)
+  zip_code        String?   @db.VarChar(10)
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  is_default      Boolean   @default(false)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  user            users     @relation(fields: [user_id], references: [id])
+}
+
+model companies {
+  id              Int       @id @default(autoincrement())
+  auth_account_id Int       @unique
+  name_company    String    @db.VarChar(150)
+  cnpj            String    @unique @db.Char(14)
+  phone_number    String?   @db.Char(15)
+  description     String?   @db.Text
+  country         String?   @db.VarChar(80)
+  state           String?   @db.VarChar(80)
+  city            String?   @db.VarChar(80)
+  neighborhood    String?   @db.VarChar(100)
+  street          String?   @db.VarChar(150)
+  number          String?   @db.VarChar(20)
+  zip_code        String?   @db.VarChar(10)
+  latitude        Decimal?  @db.Decimal(10, 8)
+  longitude       Decimal?  @db.Decimal(11, 8)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  auth_account    auth_accounts @relation(fields: [auth_account_id], references: [id])
+  memberships     memberships[]
+  company_services company_services[]
+  vehicles        vehicles[]
+  service_requests service_requests[]
+
+  @@index([auth_account_id])
+}
+
+model memberships {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  company_id      Int
+  role            roles
+  created_at      DateTime  @default(now())
+
+  user            users     @relation(fields: [user_id], references: [id])
+  company         companies @relation(fields: [company_id], references: [id])
+
+  @@index([user_id])
+  @@index([company_id])
+  @@unique([user_id, company_id])
+}
+
+model company_services {
+  id              Int       @id @default(autoincrement())
+  company_id      Int
+  name_service    String    @db.VarChar(100)
+  description     String?   @db.Text
+  base_price      Decimal?  @db.Decimal(10, 2)
+  estimated_duration Int?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  company         companies @relation(fields: [company_id], references: [id])
+  service_requests service_requests[]
+}
+
+model vehicles {
+  id              Int       @id @default(autoincrement())
+  company_id      Int
+  name_vehicle    String    @db.VarChar(100)
+  plate           String    @unique @db.VarChar(7)
+  device_identifier String  @unique @db.VarChar(100)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  company         companies @relation(fields: [company_id], references: [id])
+  service_requests service_requests[]
+  vehicle_locations vehicle_locations[]
+}
+
+model service_requests {
+  id              Int       @id @default(autoincrement())
+  user_id         Int
+  company_id      Int
+  company_service_id Int
+  vehicle_id      Int?
+  status          status_service_request
+  notes           String?   @db.Text
+  requested_date  DateTime?
+  scheduled_date  DateTime?
+  started_at      DateTime?
+  finished_at     DateTime?
+  country         String    @db.VarChar(80)
+  state           String    @db.VarChar(80)
+  city            String    @db.VarChar(80)
+  neighborhood    String    @db.VarChar(100)
+  street          String    @db.VarChar(150)
+  number          String    @db.VarChar(20)
+  zip_code        String    @db.VarChar(10)
+  latitude        Decimal   @db.Decimal(10, 8)
+  longitude       Decimal   @db.Decimal(11, 8)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  user            users     @relation(fields: [user_id], references: [id])
+  company         companies @relation(fields: [company_id], references: [id])
+  company_service company_services @relation(fields: [company_service_id], references: [id])
+  vehicle         vehicles? @relation(fields: [vehicle_id], references: [id])
+  vehicle_locations vehicle_locations[]
+
+  @@index([user_id])
+  @@index([company_id])
+  @@index([company_service_id])
+  @@index([vehicle_id])
+  @@index([status])
+  @@index([scheduled_date])
+}
+
+model vehicle_locations {
+  id              Int       @id @default(autoincrement())
+  vehicle_id      Int
+  service_request_id Int
+  latitude        Decimal   @db.Decimal(10, 8)
+  longitude       Decimal   @db.Decimal(11, 8)
+  created_at      DateTime  @default(now())
+
+  vehicle         vehicles @relation(fields: [vehicle_id], references: [id])
+  service_request service_requests @relation(fields: [service_request_id], references: [id])
+
+  @@index([vehicle_id])
+  @@index([service_request_id])
+  @@index([created_at])
+}
