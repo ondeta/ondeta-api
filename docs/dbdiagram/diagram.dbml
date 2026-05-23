@@ -1,0 +1,223 @@
+Enum account_type {
+  user
+  company
+}
+
+Enum roles {
+  member
+  admin
+  owner
+}
+
+Enum status_service_request {
+  pendente
+  aceito
+  agendado
+  em_rota
+  finalizado
+  cancelado
+  recusado
+}
+
+Table auth_accounts {
+  id integer [pk]
+
+  firebase_uid varchar(128) [unique]
+
+  email varchar(100) [unique]
+
+  role roles
+
+  account_type account_type
+
+  is_active boolean [default: true]
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table users {
+  id integer [pk]
+
+  auth_account_id integer [ref: > auth_accounts.id]
+
+  full_name varchar(150)
+
+  cpf char(11) [unique]
+
+  phone_number char(15)
+
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    auth_account_id
+  }
+}
+
+Table user_addresses {
+  id integer [pk]
+
+  user_id integer [ref: > users.id]
+
+  label varchar(50) [null]
+
+  country varchar(80)
+  state varchar(80)
+  city varchar(80)
+  neighborhood varchar(100)
+  street varchar(150)
+  number varchar(20)
+  zip_code varchar(10)
+
+  latitude decimal(10,8)
+  longitude decimal(11,8)
+
+  is_default boolean [default: false]
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table companies {
+  id integer [pk]
+
+  auth_account_id integer [ref: > auth_accounts.id]
+
+  name_company varchar(150)
+
+  cnpj char(14) [unique]
+
+  phone_number char(15)
+
+  description text [null]
+
+  country varchar(80) [null]
+  state varchar(80) [null]
+  city varchar(80) [null]
+
+  neighborhood varchar(100) [null]
+  street varchar(150) [null]
+  number varchar(20) [null]
+  zip_code varchar(10) [null]
+
+  latitude decimal(10,8) [null]
+  longitude decimal(11,8) [null]
+
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    auth_account_id
+  }
+}
+
+Table memberships {
+  id integer [pk]
+
+  user_id integer [ref: > users.id]
+  company_id integer [ref: > companies.id]
+
+  role roles
+
+  created_at timestamp
+}
+
+Table company_services {
+  id integer [pk]
+
+  company_id integer [ref: > companies.id]
+
+  name_service varchar(100)
+
+  description text [null]
+
+  base_price decimal(10,2) [null]
+
+  estimated_duration integer [null] // minutos
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table vehicles {
+  id integer [pk]
+
+  company_id integer [ref: > companies.id]
+
+  name_vehicle varchar(100)
+
+  plate varchar(7) [unique]
+
+  device_identifier varchar(100) [unique]
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table service_requests {
+  id integer [pk]
+
+  user_id integer [ref: > users.id]
+
+  company_id integer [ref: > companies.id]
+
+  company_service_id integer [ref: > company_services.id]
+
+  vehicle_id integer [ref: > vehicles.id, null]
+
+  status status_service_request
+
+  notes text [null]
+
+  requested_date datetime [null]
+
+  scheduled_date datetime [null]
+
+  started_at timestamp [null]
+
+  finished_at timestamp [null]
+
+  country varchar(80)
+  state varchar(80)
+  city varchar(80)
+  neighborhood varchar(100)
+  street varchar(150)
+  number varchar(20)
+  zip_code varchar(10)
+
+  latitude decimal(10,8)
+  longitude decimal(11,8)
+
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    user_id
+    company_id
+    company_service_id
+    vehicle_id
+    status
+    scheduled_date
+  }
+}
+
+Table vehicle_locations {
+  id integer [pk]
+
+  vehicle_id integer [ref: > vehicles.id]
+
+  service_request_id integer [ref: > service_requests.id]
+
+  latitude decimal(10,8)
+
+  longitude decimal(11,8)
+
+  created_at timestamp
+
+  Indexes {
+    vehicle_id
+    service_request_id
+    created_at
+  }
+}
