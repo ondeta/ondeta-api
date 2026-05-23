@@ -15,7 +15,7 @@ function configureSwagger(app: INestApplication) {
     .setTitle('OndeTá API')
     .setDescription('API para o aplicativo OndeTá')
     .setVersion('1.0')
-    .addBasicAuth()
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

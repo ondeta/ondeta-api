@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import * as firebaseAdmin from 'firebase-admin';
 import { Injectable } from '@nestjs/common';
-import { CreateRequest, UserRecord } from 'firebase-admin/auth';
+import { CreateRequest, DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 import { FirebaseConfigService } from './firebase-config.service';
 import axios from 'axios';
 
@@ -15,6 +15,10 @@ export class FirebaseService {
 
   async createUser(props: CreateRequest): Promise<UserRecord> {
     return await firebaseAdmin.auth().createUser(props);
+  }
+
+  async verifyIdToken(token: string): Promise<DecodedIdToken> {
+    return await firebaseAdmin.auth().verifyIdToken(token);
   }
 
   async signInWithEmailAndPassword(email: string, password: string) {
