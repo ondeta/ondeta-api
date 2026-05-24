@@ -1,9 +1,10 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
 import { FirebaseService } from '@/firebase/firebase.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { IdToken } from '../auth/id-token.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UpdateCompanyAddressDto } from './dto/update-company-address.dto';
 
 @Controller('companies')
 export class CompaniesController {
@@ -26,5 +27,19 @@ export class CompaniesController {
       firebase: firebaseData,
       profile: dbData,
     };
+  }
+
+  @Patch('address')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  async updateAddress(
+    @IdToken() token: string,
+    @Body() updateAddressDto: UpdateCompanyAddressDto,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.companiesService.updateCompanyAddress(
+      firebaseData.uid,
+      updateAddressDto,
+    );
   }
 }
