@@ -1,12 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PrismaService } from '@/database/prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
-export class UsersService {
+export class CompaniesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUserProfile(firebaseUid: string) {
-    const user = await this.prisma.users.findFirst({
+  async getCompanyProfile(firebaseUid: string) {
+    const company = await this.prisma.companies.findFirst({
       where: {
         auth_account: {
           firebase_uid: firebaseUid,
@@ -23,10 +24,10 @@ export class UsersService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+    if (!company) {
+      throw new NotFoundException('Company not found');
     }
 
-    return user;
+    return company;
   }
 }
