@@ -121,4 +121,33 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     return await this.firebaseService.refreshAuthToken(refreshToken);
   }
+
+  async updatePassword(
+    firebaseUid: string,
+    email: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    if (currentPassword === newPassword) {
+      throw new BadRequestException('New password must be different');
+    }
+
+    // Validar credenciais atuais
+    try {
+      await this.firebaseService.signInWithEmailAndPassword(
+        email,
+        currentPassword,
+      );
+    } catch {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Atualizar senha
+    await this.firebaseService.updatePassword(firebaseUid, newPassword);
+
+    // Revogar tokens (logout em todos os dispositivos)
+    await this.firebaseService.revokeRefreshToken(firebaseUid);
+
+    return { message: 'Password updated successfully' };
+  }
 }

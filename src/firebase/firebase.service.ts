@@ -35,6 +35,13 @@ export class FirebaseService {
       .catch(this.handleFirebaseAuthError);
   }
 
+  async updatePassword(firebaseUid: string, newPassword: string) {
+    return await firebaseAdmin
+      .auth()
+      .updateUser(firebaseUid, { password: newPassword })
+      .catch(this.handleFirebaseAuthError);
+  }
+
   async deleteUser(uid: string) {
     return await firebaseAdmin
       .auth()
