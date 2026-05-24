@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FirebaseService } from '@/firebase/firebase.service';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/database/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
+import { AccountType } from '@/shared/enums';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +22,7 @@ export class AuthService {
     });
 
     await this.firebaseService.setCustomUserClaims(firebaseUser.uid, {
-      account_type: 'user',
+      account_type: AccountType.User,
     });
 
     try {
@@ -33,7 +31,7 @@ export class AuthService {
           data: {
             firebase_uid: firebaseUser.uid,
             email: dto.email,
-            account_type: 'user',
+            account_type: AccountType.User,
           },
         });
 
@@ -68,7 +66,7 @@ export class AuthService {
     });
 
     await this.firebaseService.setCustomUserClaims(firebaseUser.uid, {
-      account_type: 'company',
+      account_type: AccountType.Company,
     });
 
     try {
@@ -77,7 +75,7 @@ export class AuthService {
           data: {
             firebase_uid: firebaseUser.uid,
             email: dto.email,
-            account_type: 'company',
+            account_type: AccountType.Company,
           },
         });
 

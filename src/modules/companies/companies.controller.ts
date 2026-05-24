@@ -5,6 +5,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { IdToken } from '../auth/id-token.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateCompanyAddressDto } from './dto/update-company-address.dto';
+import { UpdateCompanyProfileDto } from './dto/update-company-profile.dto';
 
 @Controller('companies')
 export class CompaniesController {
@@ -27,6 +28,20 @@ export class CompaniesController {
       firebase: firebaseData,
       profile: dbData,
     };
+  }
+
+  @Patch('profile')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  async updateProfile(
+    @IdToken() token: string,
+    @Body() updateProfileDto: UpdateCompanyProfileDto,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.companiesService.updateCompanyProfile(
+      firebaseData.uid,
+      updateProfileDto,
+    );
   }
 
   @Patch('address')
