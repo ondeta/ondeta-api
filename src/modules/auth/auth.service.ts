@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FirebaseService } from '@/firebase/firebase.service';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/database/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
+import { AccountType } from '@/shared/enums';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +22,7 @@ export class AuthService {
     });
 
     await this.firebaseService.setCustomUserClaims(firebaseUser.uid, {
-      account_type: 'user',
+      account_type: AccountType.User,
     });
 
     try {
@@ -33,7 +31,7 @@ export class AuthService {
           data: {
             firebase_uid: firebaseUser.uid,
             email: dto.email,
-            account_type: 'user',
+            account_type: AccountType.User,
           },
         });
 
@@ -68,7 +66,7 @@ export class AuthService {
     });
 
     await this.firebaseService.setCustomUserClaims(firebaseUser.uid, {
-      account_type: 'company',
+      account_type: AccountType.Company,
     });
 
     try {
@@ -77,7 +75,7 @@ export class AuthService {
           data: {
             firebase_uid: firebaseUser.uid,
             email: dto.email,
-            account_type: 'company',
+            account_type: AccountType.Company,
           },
         });
 
@@ -122,5 +120,34 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     return await this.firebaseService.refreshAuthToken(refreshToken);
+  }
+
+  async updatePassword(
+    firebaseUid: string,
+    email: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    if (currentPassword === newPassword) {
+      throw new BadRequestException('New password must be different');
+    }
+
+    // Validar credenciais atuais
+    try {
+      await this.firebaseService.signInWithEmailAndPassword(
+        email,
+        currentPassword,
+      );
+    } catch {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    // Atualizar senha
+    await this.firebaseService.updatePassword(firebaseUid, newPassword);
+
+    // Revogar tokens (logout em todos os dispositivos)
+    await this.firebaseService.revokeRefreshToken(firebaseUid);
+
+    return { message: 'Password updated successfully' };
   }
 }
