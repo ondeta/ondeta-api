@@ -1,10 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
+  Post,
   UseGuards,
+  HttpCode,
 } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
 import { FirebaseService } from '@/firebase/firebase.service';
@@ -13,8 +18,10 @@ import { IdToken } from '../auth/id-token.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UpdateCompanyAddressDto } from './dto/update-company-address.dto';
 import { UpdateCompanyProfileDto } from './dto/update-company-profile.dto';
+import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { UpdatePasswordDto } from '../auth/dto/update-password.dto';
 import { AuthService } from '../auth/auth.service';
+import { PrismaService } from '@/database/prisma/prisma.service';
 
 @Controller('companies')
 export class CompaniesController {
@@ -22,6 +29,7 @@ export class CompaniesController {
     private readonly companiesService: CompaniesService,
     private readonly firebaseService: FirebaseService,
     private readonly authService: AuthService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get('profile')
@@ -76,9 +84,24 @@ export class CompaniesController {
     @Body() dto: UpdatePasswordDto,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    const companyProfile = await this.companiesService.getCompanyProfile(
-      firebaseData.uid,
-    );
+    const user = await this.prisma.users.findFirst({
+      where: {
+        auth_account: {
+          firebase_uid: firebaseData.uid,
+        },
+      },
+      include: {
+        auth_account: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!user?.auth_account?.email) {
+      throw new BadRequestException('User not found');
+    }
 
     if (dto.new_password !== dto.confirm_password) {
       throw new BadRequestException('Passwords do not match');
@@ -86,9 +109,29 @@ export class CompaniesController {
 
     return await this.authService.updatePassword(
       firebaseData.uid,
-      companyProfile.auth_account.email,
+      user.auth_account.email,
       dto.current_password,
       dto.new_password,
     );
+  }
+
+  @Post('transfer-ownership')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  async transferOwnership(
+    @IdToken() token: string,
+    @Body() dto: TransferOwnershipDto,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.companiesService.transferOwnership(firebaseData.uid, dto);
+  }
+
+  @Delete()
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  async deleteCompany(@IdToken() token: string) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.companiesService.deleteCompany(firebaseData.uid);
   }
 }
