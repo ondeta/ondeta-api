@@ -13,15 +13,14 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from './dto/update-membership-role.dto';
-import { AccountTypeGuard } from '@/common/guards/account-type/account-type.guard';
-import { AccountType } from '@/shared/enums';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('memberships')
 export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
   @Post()
-  @UseGuards(AccountTypeGuard(AccountType.Company))
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async create(@Body() data: CreateMembershipDto) {
     return this.membershipsService.create(data);
@@ -43,7 +42,7 @@ export class MembershipsController {
   }
 
   @Patch(':id')
-  @UseGuards(AccountTypeGuard(AccountType.Company))
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async updateRole(
     @Param('id', ParseIntPipe) id: number,
@@ -53,7 +52,7 @@ export class MembershipsController {
   }
 
   @Delete(':id')
-  @UseGuards(AccountTypeGuard(AccountType.Company))
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.membershipsService.remove(id);

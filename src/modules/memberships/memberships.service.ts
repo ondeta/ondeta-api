@@ -1,11 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import {
   Injectable,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '@/database/prisma/prisma.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipRoleDto } from './dto/update-membership-role.dto';
+import { Roles } from '@/shared/enums';
 
 @Injectable()
 export class MembershipsService {
@@ -103,7 +106,26 @@ export class MembershipsService {
   }
 
   async updateRole(id: number, data: UpdateMembershipRoleDto) {
-    await this.findById(id);
+    const membership = await this.findById(id);
+
+    // Verificar se é o owner da empresa
+    const company = await this.prisma.companies.findUnique({
+      where: { id: membership.company_id },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    // Impedir que o owner altere sua própria role
+    if (
+      membership.user_id === company.owner_user_id &&
+      membership.role === Roles.Owner
+    ) {
+      throw new ForbiddenException(
+        'Owner cannot change their own role. Use transfer-ownership endpoint instead.',
+      );
+    }
 
     return this.prisma.memberships.update({
       where: { id },
@@ -116,7 +138,26 @@ export class MembershipsService {
   }
 
   async remove(id: number) {
-    await this.findById(id);
+    const membership = await this.findById(id);
+
+    // Verificar se é o owner da empresa
+    const company = await this.prisma.companies.findUnique({
+      where: { id: membership.company_id },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    // Impedir que o owner delete a si mesmo
+    if (
+      membership.user_id === company.owner_user_id &&
+      membership.role === Roles.Owner
+    ) {
+      throw new ForbiddenException(
+        'Owner cannot be removed from company. Use transfer-ownership endpoint instead.',
+      );
+    }
 
     return this.prisma.memberships.delete({
       where: { id },
