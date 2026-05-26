@@ -1,6 +1,5 @@
-import { AccountTypeGuard } from '@/common/guards/account-type/account-type.guard';
-import { RolesGuard } from '@/common/guards/roles/roles.guard';
-import { Roles } from '@/common/decorators/roles/roles.decorator';
+import { RolesGuard, AccountTypeGuard } from '@/common/guards';
+import { Roles } from '@/common/decorators';
 import {
   Controller,
   Get,

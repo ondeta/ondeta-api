@@ -8,6 +8,7 @@ import { PrismaModule } from './database/prisma/prisma.module';
 import { AccountTypeModule } from './modules/account-type/account-type.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { MembershipsModule } from './modules/memberships/memberships.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MembershipsModule } from './modules/memberships/memberships.module';
     AccountTypeModule,
     CompaniesModule,
     MembershipsModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [PrismaService],

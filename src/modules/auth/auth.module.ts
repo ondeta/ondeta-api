@@ -10,6 +10,6 @@ import { FirebaseModule } from '@/firebase/firebase.module';
   imports: [PrismaModule, FirebaseModule],
   controllers: [AuthController],
   providers: [AuthGuard, AuthService],
-  exports: [AuthService],
+  exports: [AuthService, AuthGuard],
 })
 export class AuthModule {}

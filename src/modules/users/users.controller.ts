@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { FirebaseService } from '@/firebase/firebase.service';

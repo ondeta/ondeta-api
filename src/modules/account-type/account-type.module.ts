@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AccountTypeController } from './account-type.controller';
-import { RolesGuard } from '@/common/guards/roles/roles.guard';
+import { CommonModule } from '@/common/common.module';
 
 @Module({
+  imports: [CommonModule],
   controllers: [AccountTypeController],
-  providers: [RolesGuard],
 })
 export class AccountTypeModule {}
