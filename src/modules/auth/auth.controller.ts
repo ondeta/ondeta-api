@@ -1,8 +1,16 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Post,
+  UseGuards,
+  Inject,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { FirebaseService } from '@/firebase/firebase.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { RegisterCompanyDto } from './dto/register-company.dto';
+import { ConvertToCompanyDto } from './dto/convert-to-company.dto';
 import { IdToken } from './id-token.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
@@ -10,24 +18,33 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @Inject(FirebaseService) private readonly firebaseService: FirebaseService,
+  ) {}
 
-  @Post('register/user')
+  @Post('register')
   @HttpCode(201)
-  async registerUser(@Body() dto: RegisterUserDto) {
+  async register(@Body() dto: RegisterUserDto) {
     return await this.authService.registerUser(dto);
-  }
-
-  @Post('register/company')
-  @HttpCode(201)
-  async registerCompany(@Body() dto: RegisterCompanyDto) {
-    return await this.authService.registerCompany(dto);
   }
 
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto) {
     return await this.authService.login(dto);
+  }
+
+  @Post('convert-to-company')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  async convertToCompany(
+    @IdToken() token: string,
+    @Body() dto: ConvertToCompanyDto,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return await this.authService.convertToCompany(firebaseData.uid, dto);
   }
 
   @Post('logout')
