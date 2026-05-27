@@ -1,6 +1,13 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { FirebaseService } from '@/firebase/firebase.service';
+import { MembershipsService } from '../memberships/memberships.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { IdToken } from '../auth/id-token.decorator';
 import { AuthGuard } from '../auth/auth.guard';
@@ -10,6 +17,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly firebaseService: FirebaseService,
+    private readonly membershipsService: MembershipsService,
   ) {}
 
   @Get('profile')
@@ -24,5 +32,16 @@ export class UsersController {
       firebase: firebaseData,
       profile: dbData,
     };
+  }
+
+  @Get(':userId/memberships')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  async getMemberships(
+    @IdToken() token: string,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.membershipsService.findByUserId(firebaseData.uid, userId);
   }
 }
