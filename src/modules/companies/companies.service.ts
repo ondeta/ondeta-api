@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PrismaService } from '@/database/prisma/prisma.service';
 import {
   Injectable,
@@ -163,6 +161,13 @@ export class CompaniesService {
           firebase_uid: firebaseUid,
         },
       },
+      include: {
+        auth_account: {
+          select: {
+            firebase_uid: true,
+          },
+        },
+      },
     });
 
     if (!currentUser) {
@@ -179,6 +184,13 @@ export class CompaniesService {
 
     const newOwner = await this.prisma.users.findUnique({
       where: { id: dto.new_owner_user_id },
+      include: {
+        auth_account: {
+          select: {
+            firebase_uid: true,
+          },
+        },
+      },
     });
 
     if (!newOwner) {
@@ -202,7 +214,7 @@ export class CompaniesService {
     }
 
     // Atualizar ownership
-    return await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Atualizar membership do novo owner para owner
       await tx.memberships.update({
         where: {
@@ -257,6 +269,23 @@ export class CompaniesService {
         },
       };
     });
+
+    // Atualizar account_type no Firebase
+    if (currentUser.auth_account?.firebase_uid) {
+      await this.firebaseService.setCustomUserClaims(
+        currentUser.auth_account.firebase_uid,
+        { account_type: 'user' },
+      );
+    }
+
+    if (newOwner.auth_account?.firebase_uid) {
+      await this.firebaseService.setCustomUserClaims(
+        newOwner.auth_account.firebase_uid,
+        { account_type: 'company' },
+      );
+    }
+
+    return result;
   }
 
   async deleteCompany(firebaseUid: string) {
@@ -264,6 +293,13 @@ export class CompaniesService {
       where: {
         auth_account: {
           firebase_uid: firebaseUid,
+        },
+      },
+      include: {
+        auth_account: {
+          select: {
+            firebase_uid: true,
+          },
         },
       },
     });
@@ -280,7 +316,7 @@ export class CompaniesService {
       throw new ForbiddenException('User does not own a company');
     }
 
-    return await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Deletar todos os memberships da empresa
       await tx.memberships.deleteMany({
         where: { company_id: company.id },
@@ -306,5 +342,15 @@ export class CompaniesService {
         data: deletedCompany,
       };
     });
+
+    // Atualizar account_type no Firebase para 'user'
+    if (user.auth_account?.firebase_uid) {
+      await this.firebaseService.setCustomUserClaims(
+        user.auth_account.firebase_uid,
+        { account_type: 'user' },
+      );
+    }
+
+    return result;
   }
 }
