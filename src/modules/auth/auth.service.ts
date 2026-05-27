@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { FirebaseService } from '@/firebase/firebase.service';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '@/database/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { RegisterCompanyDto } from './dto/register-company.dto';
-import { AccountType } from '@/shared/enums';
+import { ConvertToCompanyDto } from './dto/convert-to-company.dto';
+import { AccountType, Roles } from '@/shared/enums';
 
 @Injectable()
 export class AuthService {
@@ -58,48 +63,95 @@ export class AuthService {
     }
   }
 
-  async registerCompany(dto: RegisterCompanyDto) {
-    const firebaseUser = await this.firebaseService.createUser({
-      displayName: dto.name_company,
-      email: dto.email,
-      password: dto.password,
+  async convertToCompany(firebaseUid: string, dto: ConvertToCompanyDto) {
+    const authAccount = await this.prisma.auth_accounts.findUnique({
+      where: { firebase_uid: firebaseUid },
     });
 
-    await this.firebaseService.setCustomUserClaims(firebaseUser.uid, {
-      account_type: AccountType.Company,
+    if (!authAccount) {
+      throw new NotFoundException('User not found');
+    }
+
+    const user = await this.prisma.users.findUnique({
+      where: { auth_account_id: authAccount.id },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verifica se o user já é owner de uma empresa
+    const existingOwnedCompany = await this.prisma.companies.findUnique({
+      where: { owner_user_id: user.id },
+    });
+
+    if (existingOwnedCompany) {
+      throw new ConflictException('User already owns a company');
+    }
 
     try {
-      const company = await this.prisma.$transaction(async (tx) => {
-        const authAccount = await tx.auth_accounts.create({
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Criar a empresa
+        const company = await tx.companies.create({
           data: {
-            firebase_uid: firebaseUser.uid,
-            email: dto.email,
-            account_type: AccountType.Company,
-          },
-        });
-
-        return await tx.companies.create({
-          data: {
-            auth_account_id: authAccount.id,
+            owner_user_id: user.id,
             name_company: dto.name_company,
             cnpj: dto.cnpj,
             phone_number: dto.phone_number,
             description: dto.description,
-          },
-          include: {
-            auth_account: true,
+            country: dto.country,
+            state: dto.state,
+            city: dto.city,
+            neighborhood: dto.neighborhood,
+            street: dto.street,
+            number: dto.number,
+            zip_code: dto.zip_code,
+            latitude: dto.latitude ? Number(dto.latitude) : null,
+            longitude: dto.longitude ? Number(dto.longitude) : null,
           },
         });
+
+        // Criar membership com role owner
+        const membership = await tx.memberships.create({
+          data: {
+            user_id: user.id,
+            company_id: company.id,
+            role: Roles.Owner,
+          },
+        });
+
+        // Atualizar account_type em Firebase
+        await this.firebaseService.setCustomUserClaims(firebaseUid, {
+          account_type: AccountType.Company,
+        });
+
+        // Atualizar account_type no banco
+        await tx.auth_accounts.update({
+          where: { id: authAccount.id },
+          data: {
+            account_type: AccountType.Company,
+          },
+        });
+
+        return {
+          user,
+          company,
+          membership,
+        };
       });
 
       return {
-        message: 'Company registered successfully',
-        data: company,
+        message: 'Successfully converted to company',
+        data: result,
       };
-    } catch {
-      await this.firebaseService.deleteUser(firebaseUser.uid);
-      throw new BadRequestException('Failed to create company account');
+    } catch (error) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to convert to company');
     }
   }
 
