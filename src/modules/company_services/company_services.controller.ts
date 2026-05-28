@@ -10,20 +10,20 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { MembershipsService } from './memberships.service';
-import { CreateMembershipDto } from './dto/create-membership.dto';
-import { UpdateMembershipRoleDto } from './dto/update-membership-role.dto';
+import { CompanyServicesService } from './company_services.service';
+import { CreateCompanyServiceDto } from './dto/create-company-service.dto';
+import { UpdateCompanyServiceDto } from './dto/update-company-service.dto';
 import { AuthGuard } from '../auth/auth.guard';
-import { RolesGuard } from '@/common/guards';
-import { Roles } from '@/common/decorators';
 import { IdToken } from '../auth/id-token.decorator';
 import { FirebaseService } from '@/firebase/firebase.service';
+import { Roles } from '@/common/decorators';
+import { RolesGuard } from '@/common/guards';
 import { Roles as RolesEnum } from '@/shared/enums';
 
-@Controller('companies/:companyId/memberships')
-export class MembershipsController {
+@Controller('companies/:companyId/services')
+export class CompanyServicesController {
   constructor(
-    private readonly membershipsService: MembershipsService,
+    private readonly companyServicesService: CompanyServicesService,
     private readonly firebaseService: FirebaseService,
   ) {}
 
@@ -34,72 +34,79 @@ export class MembershipsController {
   async create(
     @IdToken() token: string,
     @Param('companyId', ParseIntPipe) companyId: number,
-    @Body() data: CreateMembershipDto,
+    @Body() data: CreateCompanyServiceDto,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.membershipsService.create(firebaseData.uid, companyId, data);
+    return this.companyServicesService.create(
+      firebaseData.uid,
+      companyId,
+      data,
+    );
   }
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async listByCompany(
     @IdToken() token: string,
     @Param('companyId', ParseIntPipe) companyId: number,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.membershipsService.findByCompanyId(firebaseData.uid, companyId);
+    return this.companyServicesService.findByCompanyId(
+      firebaseData.uid,
+      companyId,
+    );
   }
 
-  @Get(':memberId')
-  @UseGuards(AuthGuard, RolesGuard)
+  @Get(':serviceId')
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   async findById(
     @IdToken() token: string,
     @Param('companyId', ParseIntPipe) companyId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Param('serviceId', ParseIntPipe) serviceId: number,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.membershipsService.findById(
+    return this.companyServicesService.findById(
       firebaseData.uid,
       companyId,
-      memberId,
+      serviceId,
     );
   }
 
-  @Patch(':memberId')
+  @Patch(':serviceId')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(RolesEnum.Owner)
+  @Roles(RolesEnum.Admin, RolesEnum.Owner)
   @ApiBearerAuth()
-  async updateRole(
+  async update(
     @IdToken() token: string,
     @Param('companyId', ParseIntPipe) companyId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
-    @Body() data: UpdateMembershipRoleDto,
+    @Param('serviceId', ParseIntPipe) serviceId: number,
+    @Body() data: UpdateCompanyServiceDto,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.membershipsService.updateRole(
+    return this.companyServicesService.update(
       firebaseData.uid,
       companyId,
-      memberId,
+      serviceId,
       data,
     );
   }
 
-  @Delete(':memberId')
+  @Delete(':serviceId')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(RolesEnum.Owner)
   @ApiBearerAuth()
   async remove(
     @IdToken() token: string,
     @Param('companyId', ParseIntPipe) companyId: number,
-    @Param('memberId', ParseIntPipe) memberId: number,
+    @Param('serviceId', ParseIntPipe) serviceId: number,
   ) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.membershipsService.remove(
+    return this.companyServicesService.remove(
       firebaseData.uid,
       companyId,
-      memberId,
+      serviceId,
     );
   }
 }
