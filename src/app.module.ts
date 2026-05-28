@@ -9,6 +9,7 @@ import { AccountTypeModule } from './modules/account-type/account-type.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { MembershipsModule } from './modules/memberships/memberships.module';
 import { CommonModule } from './common/common.module';
+import { CompanyServicesModule } from './modules/company_services/company_services.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CommonModule } from './common/common.module';
     AccountTypeModule,
     CompaniesModule,
     MembershipsModule,
+    CompanyServicesModule,
     CommonModule,
   ],
   controllers: [],
