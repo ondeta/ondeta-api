@@ -11,6 +11,7 @@ import { MembershipsModule } from './modules/memberships/memberships.module';
 import { CommonModule } from './common/common.module';
 import { CompanyServicesModule } from './modules/company_services/company_services.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
+import { ServiceRequestsModule } from './modules/service-requests/service-requests.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { VehiclesModule } from './modules/vehicles/vehicles.module';
     CompanyServicesModule,
     VehiclesModule,
     CommonModule,
+    ServiceRequestsModule,
   ],
   controllers: [],
   providers: [PrismaService],
