@@ -9,7 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { CompanyServicesService } from './company_services.service';
 import { CreateCompanyServiceDto } from './dto/create-company-service.dto';
 import { UpdateCompanyServiceDto } from './dto/update-company-service.dto';
@@ -47,31 +47,20 @@ export class CompanyServicesController {
   @Get()
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async listByCompany(
-    @IdToken() token: string,
-    @Param('companyId', ParseIntPipe) companyId: number,
-  ) {
-    const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.companyServicesService.findByCompanyId(
-      firebaseData.uid,
-      companyId,
-    );
+  @ApiOperation({ summary: 'List all services offered by a company' })
+  listByCompany(@Param('companyId', ParseIntPipe) companyId: number) {
+    return this.companyServicesService.findAllCatalogByCompanyId(companyId);
   }
 
   @Get(':serviceId')
   @UseGuards(AuthGuard)
   @ApiBearerAuth()
-  async findById(
-    @IdToken() token: string,
+  @ApiOperation({ summary: 'Get a service offered by a company' })
+  findById(
     @Param('companyId', ParseIntPipe) companyId: number,
     @Param('serviceId', ParseIntPipe) serviceId: number,
   ) {
-    const firebaseData = await this.firebaseService.verifyIdToken(token);
-    return this.companyServicesService.findById(
-      firebaseData.uid,
-      companyId,
-      serviceId,
-    );
+    return this.companyServicesService.findOneCatalog(companyId, serviceId);
   }
 
   @Patch(':serviceId')

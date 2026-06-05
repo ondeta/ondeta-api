@@ -4,6 +4,8 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -13,7 +15,7 @@ import { CompaniesService } from './companies.service';
 import { FirebaseService } from '@/firebase/firebase.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { IdToken } from '../auth/id-token.decorator';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { UpdateCompanyAddressDto } from './dto/update-company-address.dto';
 import { UpdateCompanyProfileDto } from './dto/update-company-profile.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
@@ -131,5 +133,23 @@ export class CompaniesController {
   async deleteCompany(@IdToken() token: string) {
     const firebaseData = await this.firebaseService.verifyIdToken(token);
     return this.companiesService.deleteCompany(firebaseData.uid);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List all registered companies with their services',
+  })
+  findAll() {
+    return this.companiesService.findAllCatalog();
+  }
+
+  @Get(':companyId')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get details of a registered company' })
+  findOne(@Param('companyId', ParseIntPipe) companyId: number) {
+    return this.companiesService.findOneCatalog(companyId);
   }
 }
