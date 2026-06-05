@@ -13,6 +13,7 @@ import { CompanyServicesModule } from './modules/company_services/company_servic
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { ServiceRequestsModule } from './modules/service-requests/service-requests.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
+import { VehicleLocationsModule } from './modules/vehicle-locations/vehicle-locations.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { UserAddressesModule } from './modules/user-addresses/user-addresses.mod
     CommonModule,
     ServiceRequestsModule,
     UserAddressesModule,
+    VehicleLocationsModule,
   ],
   controllers: [],
   providers: [PrismaService],
