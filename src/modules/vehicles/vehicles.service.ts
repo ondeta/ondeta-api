@@ -140,8 +140,19 @@ export class VehiclesService {
 
     await this.validateUserAccessToCompany(firebaseUid, vehicle.company_id);
 
-    return this.prisma.vehicles.delete({
-      where: { id: vehicleId },
+    return this.prisma.$transaction(async (tx) => {
+      await tx.vehicle_locations.deleteMany({
+        where: { vehicle_id: vehicleId },
+      });
+
+      await tx.service_requests.updateMany({
+        where: { vehicle_id: vehicleId },
+        data: { vehicle_id: null },
+      });
+
+      return tx.vehicles.delete({
+        where: { id: vehicleId },
+      });
     });
   }
 

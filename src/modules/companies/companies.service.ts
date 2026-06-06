@@ -379,6 +379,19 @@ export class CompaniesService {
         where: { company_id: company.id },
       });
 
+      await tx.vehicle_locations.deleteMany({
+        where: {
+          vehicle: { company_id: company.id },
+        },
+      });
+
+      await tx.service_requests.updateMany({
+        where: {
+          vehicle: { company_id: company.id },
+        },
+        data: { vehicle_id: null },
+      });
+
       // Deletar todos os veículos da empresa
       await tx.vehicles.deleteMany({
         where: { company_id: company.id },
