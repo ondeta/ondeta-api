@@ -11,12 +11,64 @@ import { UpdateCompanyProfileDto } from './dto/update-company-profile.dto';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { Roles } from '@/shared/enums';
 
+const publicCompanySelect = {
+  id: true,
+  name_company: true,
+  description: true,
+  phone_number: true,
+  country: true,
+  state: true,
+  city: true,
+  neighborhood: true,
+  street: true,
+  number: true,
+  zip_code: true,
+  latitude: true,
+  longitude: true,
+  created_at: true,
+  company_services: {
+    select: {
+      id: true,
+      name_service: true,
+      description: true,
+      base_price: true,
+      estimated_duration: true,
+      created_at: true,
+    },
+    orderBy: {
+      created_at: 'desc' as const,
+    },
+  },
+};
+
 @Injectable()
 export class CompaniesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly firebaseService: FirebaseService,
   ) {}
+
+  async findAllCatalog() {
+    return this.prisma.companies.findMany({
+      select: publicCompanySelect,
+      orderBy: {
+        name_company: 'asc',
+      },
+    });
+  }
+
+  async findOneCatalog(companyId: number) {
+    const company = await this.prisma.companies.findUnique({
+      where: { id: companyId },
+      select: publicCompanySelect,
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    return company;
+  }
 
   async getCompanyProfile(firebaseUid: string) {
     const user = await this.prisma.users.findFirst({
@@ -317,22 +369,34 @@ export class CompaniesService {
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      // Deletar todos os memberships da empresa
+      await tx.vehicle_locations.deleteMany({
+        where: {
+          service_request: { company_id: company.id },
+        },
+      });
+
+      await tx.service_requests.deleteMany({
+        where: { company_id: company.id },
+      });
+
       await tx.memberships.deleteMany({
         where: { company_id: company.id },
       });
 
-      // Deletar todos os serviços da empresa
       await tx.company_services.deleteMany({
         where: { company_id: company.id },
       });
 
-      // Deletar todos os veículos da empresa
+      await tx.vehicle_locations.deleteMany({
+        where: {
+          vehicle: { company_id: company.id },
+        },
+      });
+
       await tx.vehicles.deleteMany({
         where: { company_id: company.id },
       });
 
-      // Deletar empresa
       const deletedCompany = await tx.companies.delete({
         where: { id: company.id },
       });

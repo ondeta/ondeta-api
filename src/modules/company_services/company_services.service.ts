@@ -39,8 +39,8 @@ export class CompanyServicesService {
     });
   }
 
-  async findByCompanyId(firebaseUid: string, companyId: number) {
-    await this.validateUserAccessToCompany(firebaseUid, companyId);
+  async findAllCatalogByCompanyId(companyId: number) {
+    await this.ensureCompanyExists(companyId);
 
     return this.prisma.company_services.findMany({
       where: {
@@ -52,8 +52,8 @@ export class CompanyServicesService {
     });
   }
 
-  async findById(firebaseUid: string, companyId: number, serviceId: number) {
-    await this.validateUserAccessToCompany(firebaseUid, companyId);
+  async findOneCatalog(companyId: number, serviceId: number) {
+    await this.ensureCompanyExists(companyId);
 
     const service = await this.prisma.company_services.findUnique({
       where: { id: serviceId },
@@ -64,9 +64,7 @@ export class CompanyServicesService {
     }
 
     if (service.company_id !== companyId) {
-      throw new ForbiddenException(
-        'This service does not belong to this company',
-      );
+      throw new NotFoundException('Service not found');
     }
 
     return service;
@@ -137,6 +135,17 @@ export class CompanyServicesService {
     return this.prisma.company_services.delete({
       where: { id: serviceId },
     });
+  }
+
+  private async ensureCompanyExists(companyId: number) {
+    const company = await this.prisma.companies.findUnique({
+      where: { id: companyId },
+      select: { id: true },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
   }
 
   private async validateUserAccessToCompany(
