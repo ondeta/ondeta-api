@@ -369,12 +369,20 @@ export class CompaniesService {
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      // Deletar todos os memberships da empresa
+      await tx.vehicle_locations.deleteMany({
+        where: {
+          service_request: { company_id: company.id },
+        },
+      });
+
+      await tx.service_requests.deleteMany({
+        where: { company_id: company.id },
+      });
+
       await tx.memberships.deleteMany({
         where: { company_id: company.id },
       });
 
-      // Deletar todos os serviços da empresa
       await tx.company_services.deleteMany({
         where: { company_id: company.id },
       });
@@ -385,19 +393,10 @@ export class CompaniesService {
         },
       });
 
-      await tx.service_requests.updateMany({
-        where: {
-          vehicle: { company_id: company.id },
-        },
-        data: { vehicle_id: null },
-      });
-
-      // Deletar todos os veículos da empresa
       await tx.vehicles.deleteMany({
         where: { company_id: company.id },
       });
 
-      // Deletar empresa
       const deletedCompany = await tx.companies.delete({
         where: { id: company.id },
       });
