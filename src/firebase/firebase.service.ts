@@ -35,6 +35,30 @@ export class FirebaseService {
       .catch(this.handleFirebaseAuthError);
   }
 
+  async updateUserAccountProfile(
+    firebaseUid: string,
+    data: { displayName?: string; email?: string },
+  ) {
+    const updateData: { displayName?: string; email?: string } = {};
+
+    if (data.displayName !== undefined) {
+      updateData.displayName = data.displayName;
+    }
+
+    if (data.email !== undefined) {
+      updateData.email = data.email;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return;
+    }
+
+    return firebaseAdmin
+      .auth()
+      .updateUser(firebaseUid, updateData)
+      .catch(this.handleFirebaseAuthError);
+  }
+
   async updatePassword(firebaseUid: string, newPassword: string) {
     return await firebaseAdmin
       .auth()
