@@ -23,13 +23,7 @@ export class VehiclesService {
       throw new ConflictException('Vehicle plate already registered');
     }
 
-    const existingDevice = await this.prisma.vehicles.findUnique({
-      where: { device_identifier: data.device_identifier },
-    });
-
-    if (existingDevice) {
-      throw new ConflictException('Device identifier already registered');
-    }
+    await this.assertDeviceIdentifierIsUnique(data.device_identifier.trim());
 
     const company = await this.prisma.companies.findUnique({
       where: { id: companyId },
@@ -45,7 +39,7 @@ export class VehiclesService {
         company_id: companyId,
         name_vehicle: data.name_vehicle,
         plate: data.plate,
-        device_identifier: data.device_identifier,
+        device_identifier: data.device_identifier.trim(),
       },
     });
   }
@@ -106,17 +100,10 @@ export class VehiclesService {
       }
     }
 
-    if (
-      data.device_identifier &&
-      data.device_identifier !== vehicle.device_identifier
-    ) {
-      const existingDevice = await this.prisma.vehicles.findUnique({
-        where: { device_identifier: data.device_identifier },
-      });
+    const deviceIdentifier = data.device_identifier?.trim();
 
-      if (existingDevice) {
-        throw new ConflictException('Device identifier already registered');
-      }
+    if (deviceIdentifier && deviceIdentifier !== vehicle.device_identifier) {
+      await this.assertDeviceIdentifierIsUnique(deviceIdentifier, vehicleId);
     }
 
     return this.prisma.vehicles.update({
@@ -124,7 +111,8 @@ export class VehiclesService {
       data: {
         name_vehicle: data.name_vehicle || vehicle.name_vehicle,
         plate: data.plate || vehicle.plate,
-        device_identifier: data.device_identifier || vehicle.device_identifier,
+        device_identifier:
+          deviceIdentifier || vehicle.device_identifier,
       },
     });
   }
@@ -154,6 +142,22 @@ export class VehiclesService {
         where: { id: vehicleId },
       });
     });
+  }
+
+  private async assertDeviceIdentifierIsUnique(
+    deviceIdentifier: string,
+    excludeVehicleId?: number,
+  ) {
+    const existingVehicle = await this.prisma.vehicles.findUnique({
+      where: { device_identifier: deviceIdentifier },
+      select: { id: true },
+    });
+
+    if (existingVehicle && existingVehicle.id !== excludeVehicleId) {
+      throw new ConflictException(
+        'A vehicle with this device identifier is already registered',
+      );
+    }
   }
 
   private async validateUserAccessToCompany(

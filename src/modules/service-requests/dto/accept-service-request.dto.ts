@@ -16,4 +16,12 @@ export class AcceptServiceRequestDto {
   @IsNotEmpty()
   @IsInt()
   vehicle_id!: number;
+
+  @ApiProperty({
+    description:
+      'Company member (user ID) who will perform the service at the customer location',
+  })
+  @IsNotEmpty()
+  @IsInt()
+  assigned_user_id!: number;
 }

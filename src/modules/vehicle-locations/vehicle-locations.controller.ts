@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
   DefaultValuePipe,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { VehicleLocationsService } from './vehicle-locations.service';
 import { CreateVehicleLocationDto } from './dto/create-vehicle-location.dto';
 import { VehicleLocationResponseDto } from './dto/vehicle-location-response.dto';
@@ -18,13 +18,33 @@ import { AuthGuard } from '../auth/auth.guard';
 import { IdToken } from '../auth/id-token.decorator';
 import { DeviceIdentifier } from '@/common/decorators/device-identifier.decorator';
 import { FirebaseService } from '@/firebase/firebase.service';
+import { ServiceRequestsService } from '../service-requests/service-requests.service';
 
 @Controller('vehicle-locations')
 export class VehicleLocationsController {
   constructor(
     private readonly vehicleLocationsService: VehicleLocationsService,
     private readonly firebaseService: FirebaseService,
+    private readonly serviceRequestsService: ServiceRequestsService,
   ) {}
+
+  @Post('start-route')
+  @ApiHeader({
+    name: 'X-Device-Identifier',
+    description: 'Unique device identifier registered on the vehicle',
+    required: true,
+  })
+  @ApiOperation({
+    summary:
+      'Start route for the next scheduled service (IoT device button press)',
+  })
+  async startRoute(@DeviceIdentifier() deviceIdentifier: string | null) {
+    if (!deviceIdentifier) {
+      throw new UnauthorizedException('X-Device-Identifier header is required');
+    }
+
+    return this.serviceRequestsService.startRouteByDevice(deviceIdentifier);
+  }
 
   @Post('track')
   @ApiHeader({

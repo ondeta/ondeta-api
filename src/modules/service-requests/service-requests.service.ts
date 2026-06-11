@@ -13,6 +13,7 @@ import { UpdateServiceRequestDto } from './dto/update-service-request.dto';
 import { AcceptServiceRequestDto } from './dto/accept-service-request.dto';
 import { Roles } from '@/shared/enums';
 import { StatusServiceRequest } from '@/shared/enums';
+import { VEHICLE_OCCUPIED_STATUSES } from '@/shared/constants/service-request-statuses';
 
 @Injectable()
 export class ServiceRequestsService {
@@ -188,6 +189,12 @@ export class ServiceRequestsService {
     }
 
     await this.validateVehicleForCompany(data.vehicle_id, companyId);
+    await this.assertVehicleAvailableForNewAssignment(data.vehicle_id);
+    await this.validateAssignedUserForCompany(
+      data.assigned_user_id,
+      companyId,
+      request.user_id,
+    );
 
     return this.prisma.service_requests.update({
       where: { id: requestId },
@@ -195,6 +202,84 @@ export class ServiceRequestsService {
         status: StatusServiceRequest.Agendado,
         scheduled_date: scheduledDate,
         vehicle_id: data.vehicle_id,
+        assigned_user_id: data.assigned_user_id,
+      },
+      include: this.defaultInclude(),
+    });
+  }
+
+  async startRouteByDevice(deviceIdentifier: string) {
+    const vehicle = await this.prisma.vehicles.findUnique({
+      where: { device_identifier: deviceIdentifier },
+    });
+
+    if (!vehicle) {
+      throw new NotFoundException('Vehicle device not found');
+    }
+
+    const inRoute = await this.prisma.service_requests.findFirst({
+      where: {
+        vehicle_id: vehicle.id,
+        status: StatusServiceRequest.EmRota,
+      },
+      include: this.defaultInclude(),
+    });
+
+    if (inRoute) {
+      return inRoute;
+    }
+
+    const scheduled = await this.prisma.service_requests.findFirst({
+      where: {
+        vehicle_id: vehicle.id,
+        status: StatusServiceRequest.Agendado,
+      },
+      orderBy: [{ scheduled_date: 'asc' }, { id: 'asc' }],
+      include: this.defaultInclude(),
+    });
+
+    if (!scheduled) {
+      throw new BadRequestException(
+        'No scheduled service request found for this vehicle. Finish the current service or wait for a new assignment.',
+      );
+    }
+
+    return this.prisma.service_requests.update({
+      where: { id: scheduled.id },
+      data: {
+        status: StatusServiceRequest.EmRota,
+        started_at: new Date(),
+      },
+      include: this.defaultInclude(),
+    });
+  }
+
+  async finishByCompany(
+    firebaseUid: string,
+    companyId: number,
+    requestId: number,
+  ) {
+    await this.validateUserIsAdminOrOwner(firebaseUid, companyId);
+
+    const request = await this.getRequestOrThrow(requestId);
+
+    if (request.company_id !== companyId) {
+      throw new ForbiddenException(
+        'This request does not belong to this company',
+      );
+    }
+
+    if (request.status !== StatusServiceRequest.EmRota) {
+      throw new BadRequestException(
+        'Only in-route service requests can be finished',
+      );
+    }
+
+    return this.prisma.service_requests.update({
+      where: { id: requestId },
+      data: {
+        status: StatusServiceRequest.Finalizado,
+        finished_at: new Date(),
       },
       include: this.defaultInclude(),
     });
@@ -254,6 +339,13 @@ export class ServiceRequestsService {
         },
       },
       user: {
+        select: {
+          id: true,
+          full_name: true,
+          phone_number: true,
+        },
+      },
+      assigned_user: {
         select: {
           id: true,
           full_name: true,
@@ -356,6 +448,71 @@ export class ServiceRequestsService {
     }
 
     return { user, membership };
+  }
+
+  private async assertVehicleAvailableForNewAssignment(vehicleId: number) {
+    const activeRequest = await this.prisma.service_requests.findFirst({
+      where: {
+        vehicle_id: vehicleId,
+        status: { in: VEHICLE_OCCUPIED_STATUSES },
+      },
+      select: { id: true },
+    });
+
+    if (activeRequest) {
+      throw new BadRequestException(
+        'This vehicle already has an active service request. Finish it before assigning another.',
+      );
+    }
+  }
+
+  private async validateAssignedUserForCompany(
+    assignedUserId: number,
+    companyId: number,
+    requesterUserId: number,
+  ) {
+    if (assignedUserId === requesterUserId) {
+      throw new BadRequestException(
+        'The customer who requested the service cannot be assigned to perform it',
+      );
+    }
+
+    const assignedUser = await this.prisma.users.findUnique({
+      where: { id: assignedUserId },
+      select: { id: true },
+    });
+
+    if (!assignedUser) {
+      throw new NotFoundException('Assigned user not found');
+    }
+
+    const company = await this.prisma.companies.findUnique({
+      where: { id: companyId },
+      select: { owner_user_id: true },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    if (company.owner_user_id === assignedUserId) {
+      return;
+    }
+
+    const membership = await this.prisma.memberships.findUnique({
+      where: {
+        user_id_company_id: {
+          user_id: assignedUserId,
+          company_id: companyId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new BadRequestException(
+        'The assigned user must be a member of this company',
+      );
+    }
   }
 
   private async validateVehicleForCompany(

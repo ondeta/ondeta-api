@@ -12,5 +12,6 @@ import { PrismaModule } from '@/database/prisma/prisma.module';
   imports: [CommonModule, FirebaseModule, PrismaModule],
   controllers: [ServiceRequestsController, CompanyServiceRequestsController],
   providers: [ServiceRequestsService],
+  exports: [ServiceRequestsService],
 })
 export class ServiceRequestsModule {}

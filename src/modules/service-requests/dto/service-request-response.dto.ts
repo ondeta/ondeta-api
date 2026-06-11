@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { StatusServiceRequest } from '@/shared/enums';
+import { AssignedMemberDto } from './assigned-member.dto';
 
 export class ServiceRequestResponseDto {
   @ApiProperty({ description: 'Service request ID' })
@@ -16,6 +17,19 @@ export class ServiceRequestResponseDto {
 
   @ApiProperty({ description: 'Assigned vehicle ID', required: false })
   vehicle_id?: number | null;
+
+  @ApiProperty({
+    description: 'User ID of the company member assigned to perform the service',
+    required: false,
+  })
+  assigned_user_id?: number | null;
+
+  @ApiProperty({
+    description: 'Company member who will perform the service',
+    required: false,
+    type: AssignedMemberDto,
+  })
+  assigned_user?: AssignedMemberDto | null;
 
   @ApiProperty({
     description: 'Current status',

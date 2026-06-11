@@ -4,6 +4,7 @@ import { VehicleLocationsService } from './vehicle-locations.service';
 import { VehicleLocationsController } from './vehicle-locations.controller';
 import { FirebaseModule } from '@/firebase/firebase.module';
 import { PrismaModule } from '@/database/prisma/prisma.module';
+import { ServiceRequestsModule } from '../service-requests/service-requests.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { PrismaModule } from '@/database/prisma/prisma.module';
     }),
     FirebaseModule,
     PrismaModule,
+    ServiceRequestsModule,
   ],
   controllers: [VehicleLocationsController],
   providers: [VehicleLocationsService],

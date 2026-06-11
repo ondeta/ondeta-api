@@ -170,6 +170,8 @@ Table service_requests {
 
   vehicle_id integer [ref: > vehicles.id, null]
 
+  assigned_user_id integer [ref: > users.id, null]
+
   status status_service_request
 
   notes text [null]
@@ -201,6 +203,7 @@ Table service_requests {
     company_id
     company_service_id
     vehicle_id
+    assigned_user_id
     status
     scheduled_date
   }

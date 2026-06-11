@@ -21,7 +21,8 @@ export class UpdateVehicleDto {
   plate?: string;
 
   @ApiProperty({
-    description: 'Device identifier for tracking',
+    description:
+      'Unique device identifier for tracking (X-Device-Identifier). Must not be used by another vehicle.',
     required: false,
   })
   @IsOptional()

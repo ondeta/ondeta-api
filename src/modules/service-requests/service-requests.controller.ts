@@ -92,7 +92,7 @@ export class CompanyServiceRequestsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      'Accept a pending request and schedule date and vehicle for the visit',
+      'Accept a pending request and schedule date, vehicle, and assigned member for the visit',
   })
   async accept(
     @IdToken() token: string,
@@ -106,6 +106,27 @@ export class CompanyServiceRequestsController {
       companyId,
       requestId,
       data,
+    );
+  }
+
+  @Patch(':requestId/finish')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(RolesEnum.Admin, RolesEnum.Owner)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Mark an in-route service request as finished so the vehicle can take the next one',
+  })
+  async finish(
+    @IdToken() token: string,
+    @Param('companyId', ParseIntPipe) companyId: number,
+    @Param('requestId', ParseIntPipe) requestId: number,
+  ) {
+    const firebaseData = await this.firebaseService.verifyIdToken(token);
+    return this.serviceRequestsService.finishByCompany(
+      firebaseData.uid,
+      companyId,
+      requestId,
     );
   }
 
