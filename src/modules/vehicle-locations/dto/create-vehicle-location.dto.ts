@@ -14,7 +14,7 @@ export class CreateVehicleLocationDto {
 
   @ApiProperty({
     description:
-      'Service request being tracked. If omitted, the active request for the vehicle (agendado or em_rota) is used.',
+      'Service request being tracked. If omitted, the in-route request for the vehicle is used.',
     required: false,
   })
   @IsOptional()

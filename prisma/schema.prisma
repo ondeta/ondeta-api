@@ -60,6 +60,7 @@ model users {
   user_addresses  user_addresses[]
   memberships     memberships[]
   service_requests service_requests[]
+  assigned_service_requests service_requests[] @relation("AssignedServiceRequest")
 
   @@index([auth_account_id])
 }
@@ -161,6 +162,7 @@ model service_requests {
   company_id      Int
   company_service_id Int
   vehicle_id      Int?
+  assigned_user_id Int?
   status          status_service_request
   notes           String?   @db.Text
   requested_date  DateTime?
@@ -183,12 +185,14 @@ model service_requests {
   company         companies @relation(fields: [company_id], references: [id])
   company_service company_services @relation(fields: [company_service_id], references: [id])
   vehicle         vehicles? @relation(fields: [vehicle_id], references: [id])
+  assigned_user   users? @relation("AssignedServiceRequest", fields: [assigned_user_id], references: [id])
   vehicle_locations vehicle_locations[]
 
   @@index([user_id])
   @@index([company_id])
   @@index([company_service_id])
   @@index([vehicle_id])
+  @@index([assigned_user_id])
   @@index([status])
   @@index([scheduled_date])
 }

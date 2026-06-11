@@ -15,11 +15,9 @@ import {
   vehicleLocationLatestCacheKey,
   VEHICLE_LOCATION_CACHE_TTL_MS,
 } from '@/shared/constants/cache-keys';
+import { VEHICLE_TRACKABLE_STATUSES } from '@/shared/constants/service-request-statuses';
 
-const TRACKABLE_STATUSES: StatusServiceRequest[] = [
-  StatusServiceRequest.Agendado,
-  StatusServiceRequest.EmRota,
-];
+const TRACKABLE_STATUSES = VEHICLE_TRACKABLE_STATUSES;
 
 @Injectable()
 export class VehicleLocationsService {
@@ -151,7 +149,7 @@ export class VehicleLocationsService {
 
     if (!activeRequest) {
       throw new BadRequestException(
-        'No active service request found for this vehicle. Provide service_request_id or wait until a visit is scheduled and in route.',
+        'No in-route service request found for this vehicle. Start the route from the device or provide service_request_id.',
       );
     }
 
@@ -161,7 +159,7 @@ export class VehicleLocationsService {
   private assertTrackableStatus(status: StatusServiceRequest) {
     if (!TRACKABLE_STATUSES.includes(status)) {
       throw new BadRequestException(
-        'Location can only be reported while the service request is scheduled or in route',
+        'Location can only be reported while the service request is in route',
       );
     }
   }

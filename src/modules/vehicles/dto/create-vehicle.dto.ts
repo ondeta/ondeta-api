@@ -17,7 +17,10 @@ export class CreateVehicleDto {
   })
   plate!: string;
 
-  @ApiProperty({ description: 'Device identifier for tracking' })
+  @ApiProperty({
+    description:
+      'Unique device identifier for tracking (X-Device-Identifier). Must not be used by another vehicle.',
+  })
   @IsNotEmpty()
   @IsString()
   @Length(1, 100)

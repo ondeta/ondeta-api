@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { VehicleLocationsController } from './vehicle-locations.controller';
 import { VehicleLocationsService } from './vehicle-locations.service';
 import { FirebaseService } from '@/firebase/firebase.service';
+import { ServiceRequestsService } from '../service-requests/service-requests.service';
 
 describe('VehicleLocationsController', () => {
   let controller: VehicleLocationsController;
@@ -12,6 +13,10 @@ describe('VehicleLocationsController', () => {
       providers: [
         {
           provide: VehicleLocationsService,
+          useValue: {},
+        },
+        {
+          provide: ServiceRequestsService,
           useValue: {},
         },
         {
