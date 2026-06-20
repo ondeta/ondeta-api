@@ -14,6 +14,7 @@ import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { ServiceRequestsModule } from './modules/service-requests/service-requests.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
 import { VehicleLocationsModule } from './modules/vehicle-locations/vehicle-locations.module';
+import { DemandAnalyticsModule } from './modules/demand-analytics/demand-analytics.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { VehicleLocationsModule } from './modules/vehicle-locations/vehicle-loca
     ServiceRequestsModule,
     UserAddressesModule,
     VehicleLocationsModule,
+    DemandAnalyticsModule,
   ],
   controllers: [],
   providers: [PrismaService],
