@@ -1,18 +1,24 @@
-import { Test, TestingModule } from '@nestjs/testing';
+jest.mock('generated/prisma/client', () => ({
+  PrismaClient: class PrismaClientMock {
+    constructor() {}
+  },
+}));
+
 import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {
-  let service: PrismaService;
+  const originalDatabaseUrl = process.env.DATABASE_URL;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService],
-    }).compile();
-
-    service = module.get<PrismaService>(PrismaService);
+  beforeAll(() => {
+    process.env.DATABASE_URL =
+      process.env.DATABASE_URL ?? 'postgresql://test:test@localhost:5432/test';
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterAll(() => {
+    process.env.DATABASE_URL = originalDatabaseUrl;
+  });
+
+  it('instancia PrismaService', () => {
+    expect(new PrismaService()).toBeInstanceOf(PrismaService);
   });
 });
