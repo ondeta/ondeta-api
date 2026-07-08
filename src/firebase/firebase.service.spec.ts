@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { FirebaseConfigService } from './firebase-config.service';
 import { FirebaseService } from './firebase.service';
 
 describe('FirebaseService', () => {
@@ -6,7 +7,13 @@ describe('FirebaseService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [FirebaseService],
+      providers: [
+        FirebaseService,
+        {
+          provide: FirebaseConfigService,
+          useValue: new FirebaseConfigService('test-api-key'),
+        },
+      ],
     }).compile();
 
     service = module.get<FirebaseService>(FirebaseService);

@@ -78,6 +78,21 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1",
+      "^generated/(.*)$": "<rootDir>/../generated/$1",
+      "^\\./enums\\.js$": "<rootDir>/../generated/prisma/enums.ts",
+      "^\\./models\\.js$": "<rootDir>/../generated/prisma/models.ts",
+      "^\\./commonInputTypes\\.js$": "<rootDir>/../generated/prisma/commonInputTypes.ts",
+      "^\\./internal/class\\.js$": "<rootDir>/../generated/prisma/internal/class.ts",
+      "^\\./internal/prismaNamespace\\.js$": "<rootDir>/../generated/prisma/internal/prismaNamespace.ts",
+      "^\\./internal/prismaNamespaceBrowser\\.js$": "<rootDir>/../generated/prisma/internal/prismaNamespaceBrowser.ts",
+      "^\\./models/(.*)\\.js$": "<rootDir>/../generated/prisma/models/$1.ts",
+      "^\\.\\./models\\.js$": "<rootDir>/../generated/prisma/models.ts",
+      "^\\.\\./commonInputTypes\\.js$": "<rootDir>/../generated/prisma/commonInputTypes.ts",
+      "^\\.\\./internal/prismaNamespace\\.js$": "<rootDir>/../generated/prisma/internal/prismaNamespace.ts",
+      "^\\.\\./internal/prismaNamespaceBrowser\\.js$": "<rootDir>/../generated/prisma/internal/prismaNamespaceBrowser.ts"
+    }
   }
 }
