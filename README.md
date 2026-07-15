@@ -1,3 +1,5 @@
+# OndeTá API
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
@@ -21,114 +23,361 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+### Descrição
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Backend da plataforma **OndeTá**, desenvolvido com **NestJS**, **Prisma ORM** e **PostgreSQL**, responsável pelo gerenciamento de autenticação, usuários, empresas, veículos, serviços e solicitações.
 
-## Estrutura do Projeto - Diretório `/src`
+A API fornece todos os recursos necessários para o aplicativo móvel, implementando autenticação via Firebase, controle de permissões, gerenciamento empresarial e documentação automática utilizando Swagger.
 
-## 📁 Organização de Pastas
+### Tecnologias
 
-### Raiz (`/src`)
-- **`app.module.ts`** - Módulo principal da aplicação (root module)
-- **`main.ts`** - Arquivo de entrada da aplicação
+- NestJS
+- TypeScript
+- Prisma ORM
+- PostgreSQL (Neon compatível)
+- Firebase Admin SDK
+- Swagger/OpenAPI
+- Docker Compose
+- Axios
+- Cache Manager
+- Class Validator
+- Class Transformer
 
-### 📂 `/common`
-Contém utilitários e componentes reutilizáveis em toda a aplicação:
-- **`decorators/`** - Decoradores customizados do NestJS
-- **`filters/`** - Filtros de exceção
-- **`guards/`** - Guards de autenticação/autorização
-- **`interceptors/`** - Interceptadores de requisição/resposta
-- **`middlewares/`** - Middlewares customizados
-- **`pipes/`** - Pipes de transformação/validação
-- **`utils/`** - Funções utilitárias
+### Arquitetura
 
-### 📂 `/config`
-Configurações da aplicação (variáveis de ambiente, settings, etc.)
+O projeto segue uma arquitetura modular baseada em recursos (feature-based architecture), aproveitando o sistema de módulos do NestJS.
 
-### 📂 `/database`
-Configuração e setup do banco de dados (conexões, migrations, seeds, etc.)
-
-### 📂 `/modules`
-Módulos de negócio da aplicação (cada feature tem seu próprio módulo)
-
-### 📂 `/shared`
-Recursos compartilhados entre módulos:
-- **`constants/`** - Constantes globais
-- **`interfaces/`** - Interfaces TypeScript compartilhadas
-- **`types/`** - Tipos TypeScript compartilhados
-
-## 🏗️ Padrão
-Projeto segue a arquitetura modular do **NestJS**, com separação clara entre camadas comuns, configuração, dados e features específicas.
-
-## Project setup
-
-```bash
-$ npm install
+```
+Cliente
+      │
+      ▼
+Controllers
+      │
+      ▼
+Services
+      │
+      ▼
+Prisma ORM
+      │
+      ▼
+PostgreSQL
 ```
 
-## Compile and run the project
+Além disso, existem módulos compartilhados responsáveis por autenticação, banco de dados, configuração e utilitários comuns.
 
-```bash
-# development
-$ npm run start
+### Estrutura do Projeto
 
-# watch mode
-$ npm run start:dev
+```
+src/
 
-# production mode
-$ npm run start:prod
+├── app.module.ts
+
+├── common/
+│   ├── decorators
+│   ├── filters
+│   ├── guards
+│   ├── interceptors
+│   └── pipes
+
+├── config/
+
+├── database/
+
+├── firebase/
+
+├── shared/
+
+└── modules/
+
+    ├── auth
+    ├── users
+    ├── user-addresses
+    ├── companies
+    ├── memberships
+    ├── company_services
+    ├── vehicles
+    ├── vehicle-locations
+    ├── service-requests
+    ├── demand-analytics
+    └── account-type
 ```
 
-## Run tests
+### Funcionalidades
 
-```bash
-# unit tests
-$ npm run test
+#### Autenticação
 
-# e2e tests
-$ npm run test:e2e
+- Login via Firebase
+- Validação de ID Token
+- Controle de acesso
+- Guards de autenticação
+- Integração com Firebase Admin
 
-# test coverage
-$ npm run test:cov
+#### Usuários
+
+- Cadastro
+- Consulta
+- Atualização
+- Exclusão
+- Perfil
+
+#### Endereços
+
+Cada usuário pode possuir múltiplos endereços.
+
+Recursos:
+
+- cadastro
+- edição
+- remoção
+- endereço padrão
+
+#### Empresas
+
+- Cadastro de empresas
+- Atualização
+- Exclusão
+- Consulta
+
+#### Membros
+
+Controle de participação dos usuários nas empresas.
+
+Permissões como:
+
+- Owner
+- Admin
+- Member
+
+#### Serviços
+
+Gerenciamento dos serviços oferecidos pelas empresas.
+
+Inclui:
+
+- cadastro
+- edição
+- listagem
+- remoção
+
+#### Veículos
+
+Empresas podem cadastrar seus veículos para utilização durante a prestação dos serviços.
+
+#### Localização dos veículos
+
+Registro da localização dos veículos.
+
+Preparado para integração com dispositivos IoT.
+
+#### Solicitações de Serviço
+
+Clientes podem solicitar serviços.
+
+Empresas podem:
+
+- visualizar
+- aceitar
+- acompanhar
+- finalizar
+
+#### Analytics
+
+Módulo responsável por estatísticas e métricas relacionadas às solicitações de serviço.
+
+### Banco de Dados
+
+O projeto utiliza **Prisma ORM**.
+
+Existe documentação do banco em:
+
+```
+docs/dbdiagram/
 ```
 
-## Deployment
+Além disso, o projeto possui:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+prisma/schema.prisma
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+como fonte principal do modelo de dados.
 
-## Resources
+### Principais Entidades
 
-Check out a few resources that may come in handy when working with NestJS:
+- Users
+- UserAddresses
+- Companies
+- Memberships
+- CompanyServices
+- Vehicles
+- VehicleLocations
+- ServiceRequests
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Segurança
 
-## Support
+A API implementa diversas camadas de segurança.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Entre elas:
 
-## Stay in touch
+- Firebase Authentication
+- Guards
+- Decorators personalizados
+- Validação de DTOs
+- Pipes
+- Interceptors
+- Exception Filters
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Documentação da API
 
-## License
+O projeto utiliza:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Swagger
+
+A documentação é gerada automaticamente a partir dos decorators do NestJS.
+
+Após iniciar o projeto, normalmente estará disponível em:
+
+```
+/api
+```
+
+### Configuração
+
+#### Variáveis de Ambiente
+
+O projeto possui:
+
+```
+.env.example
+```
+
+As principais configurações incluem:
+
+- Banco PostgreSQL
+- Firebase
+- Porta da aplicação
+- Ambiente
+- Cache
+
+### Instalação
+
+#### Clonar
+
+```bash
+git clone https://github.com/ondeta/ondeta-api.git
+```
+
+#### Instalar dependências
+
+```bash
+npm install
+```
+
+#### Configurar ambiente
+
+```bash
+cp .env.example .env
+```
+
+Editar as variáveis necessárias.
+
+#### Executar
+
+Modo desenvolvimento
+
+```bash
+npm run start:dev
+```
+
+Produção
+
+```bash
+npm run start:prod
+```
+
+Build
+
+```bash
+npm run build
+```
+
+### Docker
+
+O projeto possui:
+
+```
+docker-compose.yml
+```
+
+facilitando a execução do ambiente de desenvolvimento.
+
+### Testes
+
+O projeto possui suporte aos testes do NestJS.
+
+Scripts disponíveis:
+
+```bash
+npm run test
+```
+
+```bash
+npm run test:watch
+```
+
+```bash
+npm run test:cov
+```
+
+```bash
+npm run test:e2e
+```
+
+### Organização dos Módulos
+
+Cada módulo segue o padrão do NestJS:
+
+```
+module/
+
+controllers/
+services/
+dto/
+entities/
+interfaces/
+repositories/
+module.ts
+```
+
+Essa organização favorece escalabilidade e manutenção.
+
+### Fluxo Geral
+
+```
+App Mobile
+        │
+        ▼
+Firebase Authentication
+        │
+        ▼
+NestJS API
+        │
+        ▼
+Guards
+        │
+        ▼
+Controllers
+        │
+        ▼
+Services
+        │
+        ▼
+Prisma ORM
+        │
+        ▼
+PostgreSQL
+```
+
+# Licença
+
+Projeto desenvolvido para a plataforma **OndeTá**, destinada à intermediação entre clientes e prestadores de serviços, oferecendo gerenciamento de empresas, veículos, solicitações e localização em tempo real.
